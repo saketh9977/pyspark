@@ -10,6 +10,10 @@ SQL_FILE = './transformations.sql'
 def cell_transformation(cell):
     return cell + 10
 
+@udf(returnType=IntegerType())
+def multi_col_transformation(min_col, close_col):
+    return close_col - min_col
+
 def main():
     spark = SparkSession.builder.getOrCreate()
     print('=========================')
@@ -23,9 +27,11 @@ def main():
         commands = stream.read()
         df_res = spark.sql(commands)
 
-    # df_res.show()
     df_cell_t = df_res.withColumn('close_cell_t', cell_transformation('close'))
-    df_cell_t.show()
+    # df_cell_t.show()
+
+    df_multi_col_t = df_cell_t.withColumn('close_min_diff_t', multi_col_transformation('min_', 'close'))
+    df_multi_col_t.show()
 
 if __name__ == '__main__':
     main()
